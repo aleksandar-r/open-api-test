@@ -1,5 +1,5 @@
 export interface Report {
   id: string;
-  name: string;
+  title: string;
   description: string;
 }
