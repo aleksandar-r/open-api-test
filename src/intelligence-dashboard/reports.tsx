@@ -9,6 +9,7 @@ import {
 import * as ReportsStyle from './reports.style';
 import useReports from './use-reports';
 import * as Common from '../common';
+import * as Auth from '../user';
 import {
   MuiSortableTable,
   MuiRowDragHandleCell
@@ -18,9 +19,12 @@ import DOMPurify from 'dompurify';
 import * as Utils from './utils';
 
 export function Reports() {
+  const { role } = Auth.useUser();
+
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [filter, setFilter] = React.useState('');
+  const [reportOrder, setReportOrder] = React.useState<string[]>([]);
 
   const { reports, deleteReport } = useReports();
   const reportsArray = React.useMemo(() => Object.values(reports), [reports]);
@@ -53,29 +57,39 @@ export function Reports() {
         id: 'actions',
         cell: (row) => (
           <>
-            <Mui.Tooltip title="Edit report">
-              <ReactRouter.Link to={Common.Routes.HOME(row.id)}>
-                <Mui.IconButton color="primary">
-                  <EditIcon />
+            <Auth.Role role={role} match={Auth.UserRole.Admin}>
+              <Mui.Tooltip title="Edit report">
+                <ReactRouter.Link
+                  to={Common.Routes.HOME(row.id)}
+                  onClick={() =>
+                    Common.logAnalytics('edit_report', { id: row.id })
+                  }
+                >
+                  <Mui.IconButton color="primary">
+                    <EditIcon />
+                  </Mui.IconButton>
+                </ReactRouter.Link>
+              </Mui.Tooltip>
+            </Auth.Role>
+            <Auth.Role role={role} match={Auth.UserRole.Admin}>
+              <Mui.Tooltip title="Delete report">
+                <Mui.IconButton
+                  color="error"
+                  onClick={() => {
+                    deleteReport(row.id);
+                    Common.logAnalytics('delete_report', { id: row.id });
+                  }}
+                >
+                  <DeleteIcon />
                 </Mui.IconButton>
-              </ReactRouter.Link>
-            </Mui.Tooltip>
-            <Mui.Tooltip title="Delete report">
-              <Mui.IconButton
-                color="error"
-                onClick={() => deleteReport(row.id)}
-              >
-                <DeleteIcon />
-              </Mui.IconButton>
-            </Mui.Tooltip>
+              </Mui.Tooltip>
+            </Auth.Role>
           </>
         )
       }
     ],
-    [deleteReport]
+    [deleteReport, role]
   );
-
-  const [reportOrder, setReportOrder] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     const parsed = Utils.getStoredOrder();
@@ -166,13 +180,20 @@ export function Reports() {
 
           <ReportsStyle.TableFooter>
             <Mui.Stack direction="row" spacing={2}>
-              <Mui.Tooltip title="Add new report">
-                <ReactRouter.Link to={Common.Routes.HOME('new')}>
-                  <Mui.IconButton color="primary">
-                    <AddIcon />
-                  </Mui.IconButton>
-                </ReactRouter.Link>
-              </Mui.Tooltip>
+              <Auth.Role role={role} match={Auth.UserRole.Admin}>
+                <Mui.Tooltip title="Add new report">
+                  <ReactRouter.Link
+                    to={Common.Routes.HOME('new')}
+                    onClick={() =>
+                      Common.logAnalytics('add_report', { id: 'new' })
+                    }
+                  >
+                    <Mui.IconButton color="primary">
+                      <AddIcon />
+                    </Mui.IconButton>
+                  </ReactRouter.Link>
+                </Mui.Tooltip>
+              </Auth.Role>
             </Mui.Stack>
 
             <Mui.TablePagination

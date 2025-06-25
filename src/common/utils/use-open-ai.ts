@@ -26,7 +26,6 @@ export function useOpenAIDraft() {
       });
 
       return res.choices[0].message?.content ?? '';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: unknown) {
       setError(err instanceof Error ? err?.message : 'Unknown error occurred.');
       return null;
