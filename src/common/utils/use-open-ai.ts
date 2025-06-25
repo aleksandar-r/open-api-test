@@ -8,11 +8,11 @@ export function useOpenAIDraft() {
 
   const client = React.useMemo(() => {
     return new OpenAI({
-      apiKey: Common.OPEN_API_KEY,
+      apiKey: Common.OPENAI_API_KEY,
       dangerouslyAllowBrowser: true
     });
   }, []);
-
+  console.log(Common.OPENAI_API_KEY);
   const chat = async (
     messages: { role: 'system' | 'user'; content: string }[]
   ): Promise<string | null> => {
@@ -21,7 +21,7 @@ export function useOpenAIDraft() {
 
     try {
       const res = await client.chat.completions.create({
-        model: 'gpt-4',
+        model: 'gpt-3.5-turbo-0125',
         messages,
         stream: false
       });
