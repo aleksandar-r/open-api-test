@@ -12,7 +12,6 @@ export function useOpenAIDraft() {
       dangerouslyAllowBrowser: true
     });
   }, []);
-  console.log(Common.OPENAI_API_KEY);
   const chat = async (
     messages: { role: 'system' | 'user'; content: string }[]
   ): Promise<string | null> => {
