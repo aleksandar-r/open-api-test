@@ -19,6 +19,19 @@ import {
 } from '@dnd-kit/core';
 import * as Mui from '@mui/material';
 
+type Column<T> = {
+  id: string;
+  cell: (row: T) => React.ReactNode;
+};
+
+type MuiSortableTableProps<T> = {
+  columns: Column<T>[];
+  data: T[];
+  setData: (rows: T[]) => void;
+  getRowId: (row: T) => string;
+};
+
+// Row Drag Handle
 export const MuiRowDragHandleCell = ({ rowId }: { rowId: string }) => {
   const { attributes, listeners } = useSortable({ id: rowId });
   return (
@@ -28,9 +41,16 @@ export const MuiRowDragHandleCell = ({ rowId }: { rowId: string }) => {
   );
 };
 
-const MuiDraggableRow = ({ row, columns }: any) => {
+// Draggable Row
+const MuiDraggableRow = <T,>({
+  row,
+  columns
+}: {
+  row: T;
+  columns: Column<T>[];
+}) => {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.id
+    id: (row as any).id // optionally improve this if `id` is typed
   });
 
   const style: React.CSSProperties = {
@@ -43,18 +63,21 @@ const MuiDraggableRow = ({ row, columns }: any) => {
 
   return (
     <Mui.TableRow ref={setNodeRef} style={style} hover>
-      {columns.map((col: any) => (
+      {columns.map((col) => (
         <Mui.TableCell key={col.id}>{col.cell(row)}</Mui.TableCell>
       ))}
     </Mui.TableRow>
   );
 };
 
-export const MuiSortableTable = ({ columns, data, setData, getRowId }: any) => {
-  const ids = React.useMemo(
-    () => data.map((row: any) => getRowId(row)),
-    [data, getRowId]
-  );
+// Sortable Table
+export const MuiSortableTable = <T,>({
+  columns,
+  data,
+  setData,
+  getRowId
+}: MuiSortableTableProps<T>) => {
+  const ids = React.useMemo(() => data.map(getRowId), [data, getRowId]);
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -65,10 +88,9 @@ export const MuiSortableTable = ({ columns, data, setData, getRowId }: any) => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
-      const oldIndex = ids.indexOf(active.id);
-      const newIndex = ids.indexOf(over.id);
-      const reordered = arrayMove(data, oldIndex, newIndex);
-      setData(reordered);
+      const oldIndex = ids.indexOf(active.id as string);
+      const newIndex = ids.indexOf(over.id as string);
+      setData(arrayMove(data, oldIndex, newIndex));
     }
   };
 
@@ -81,7 +103,7 @@ export const MuiSortableTable = ({ columns, data, setData, getRowId }: any) => {
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <Mui.TableBody>
-          {data.map((row: any) => (
+          {data.map((row) => (
             <MuiDraggableRow key={getRowId(row)} row={row} columns={columns} />
           ))}
         </Mui.TableBody>
