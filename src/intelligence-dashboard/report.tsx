@@ -5,6 +5,7 @@ import * as ReactHookForm from 'react-hook-form';
 import * as Mui from '@mui/material';
 import { ArrowBackIos as ArrowBackIosIcon } from '@mui/icons-material';
 import { Editor } from '@tinymce/tinymce-react';
+import { enqueueSnackbar } from 'notistack';
 import schema from './report.schema';
 import * as ReportsStyle from './reports.style';
 import useReports from './use-reports';
@@ -30,29 +31,36 @@ function Report() {
   const { formState, control, register, handleSubmit, setValue, watch } =
     siteForm;
 
-  const {
-    generate,
-    summarize,
-    loading: aiLoading,
-    error: aiError
-  } = Common.useOpenAIDraft();
+  const { generate, summarize, loading: aiLoading } = Common.useOpenAIDraft();
 
   const handleReportUpsert = handleSubmit((data) => {
     const newData = data.id ? data : { ...data, id: crypto.randomUUID() };
     setReport(newData);
+    Common.logAnalytics(data.id ? 'Update report' : 'Save report', data);
+    enqueueSnackbar(data.id ? 'Report updated' : 'Report saved', {
+      variant: 'success'
+    });
     navigate(Common.Routes.HOME());
   });
 
   const handleDraft = async () => {
     const title = watch('title');
     const result = await generate(title);
-    if (result) setValue('description', result);
+    if (result) {
+      setValue('description', result);
+      Common.logAnalytics('Draft report', { title, result });
+      enqueueSnackbar('Description generated', { variant: 'success' });
+    }
   };
 
   const handleSummarize = async () => {
     const description = watch('description');
     const result = await summarize(description);
-    if (result) setValue('description', result);
+    if (result) {
+      setValue('description', result);
+      Common.logAnalytics('Summarize report', { description, result });
+      enqueueSnackbar('Text summarized', { variant: 'success' });
+    }
   };
 
   const handleSuggestTitle = async () => {
@@ -60,7 +68,11 @@ function Report() {
     const result = await generate(`Suggest a concise title for:
 
 ${description}`);
-    if (result) setValue('title', result);
+    if (result) {
+      setValue('title', result);
+      Common.logAnalytics('Suggest title', { description, result });
+      enqueueSnackbar('Title generated', { variant: 'success' });
+    }
   };
 
   return (
@@ -75,11 +87,15 @@ ${description}`);
           width="100%"
           alignSelf="center"
         >
+          {aiLoading && (
+            <Mui.LinearProgress
+              sx={{ top: 0, left: 0, width: '100%', position: 'absolute' }}
+            />
+          )}
           <Mui.Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
-            pb={1}
           >
             <Mui.Tooltip title="Back to reports list">
               <ReactRouter.Link to={Common.Routes.HOME()}>
@@ -100,6 +116,7 @@ ${description}`);
           display="flex"
           flexDirection="column"
           gap={2}
+          pt={2}
           component="form"
           onSubmit={handleReportUpsert}
         >
@@ -185,7 +202,6 @@ ${description}`);
         >
           Suggest Title
         </Mui.Button>
-        {aiError && <Mui.Typography color="error">{aiError}</Mui.Typography>}
       </Mui.Box>
     </ReportsStyle.Container>
   );

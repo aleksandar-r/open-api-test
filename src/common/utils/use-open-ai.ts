@@ -1,10 +1,10 @@
+import { enqueueSnackbar } from 'notistack';
 import * as React from 'react';
 import { OpenAI } from 'openai';
 import * as Common from '../../common';
 
 export function useOpenAIDraft() {
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<null | string>(null);
 
   const client = React.useMemo(() => {
     return new OpenAI({
@@ -16,7 +16,6 @@ export function useOpenAIDraft() {
     messages: { role: 'system' | 'user'; content: string }[]
   ): Promise<string | null> => {
     setLoading(true);
-    setError(null);
 
     try {
       const res = await client.chat.completions.create({
@@ -27,7 +26,12 @@ export function useOpenAIDraft() {
 
       return res.choices[0].message?.content ?? '';
     } catch (err: unknown) {
-      setError(err instanceof Error ? err?.message : 'Unknown error occurred.');
+      enqueueSnackbar(
+        err instanceof Error ? err?.message : 'Unknown error occurred.',
+        {
+          variant: 'error'
+        }
+      );
       return null;
     } finally {
       setLoading(false);
@@ -53,5 +57,5 @@ export function useOpenAIDraft() {
       { role: 'user', content: `Summarize this report:\n\n${text}` }
     ]);
 
-  return { generate, summarize, loading, error };
+  return { generate, summarize, loading };
 }

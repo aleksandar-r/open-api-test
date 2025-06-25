@@ -17,6 +17,7 @@ import {
 import { type Report } from './types';
 import DOMPurify from 'dompurify';
 import * as Utils from './utils';
+import { enqueueSnackbar } from 'notistack';
 
 export function Reports() {
   const { role } = Auth.useUser();
@@ -62,7 +63,7 @@ export function Reports() {
                 <ReactRouter.Link
                   to={Common.Routes.HOME(row.id)}
                   onClick={() =>
-                    Common.logAnalytics('edit_report', { id: row.id })
+                    Common.logAnalytics('edit_report_clicked', { id: row.id })
                   }
                 >
                   <Mui.IconButton color="primary">
@@ -78,6 +79,9 @@ export function Reports() {
                   onClick={() => {
                     deleteReport(row.id);
                     Common.logAnalytics('delete_report', { id: row.id });
+                    enqueueSnackbar('Report deleted', {
+                      variant: 'success'
+                    });
                   }}
                 >
                   <DeleteIcon />
@@ -185,7 +189,7 @@ export function Reports() {
                   <ReactRouter.Link
                     to={Common.Routes.HOME('new')}
                     onClick={() =>
-                      Common.logAnalytics('add_report', { id: 'new' })
+                      Common.logAnalytics('add_report_clicked', { id: 'new' })
                     }
                   >
                     <Mui.IconButton color="primary">
