@@ -64,17 +64,6 @@ npm install
 npm run dev
 ```
 
-#### Docker
-
-To start the project using Docker, execute the following commands in your terminal.
-
-```bash
-docker build --no-cache --tag adl_fe:1.0.0 .
-docker run -d -p 80:80 --name adl_fe adl_fe:1.0.0
-```
-
-> **Note:** The application in the Docker container is built for release.
-
 ### Project Structure
 
 The project follows a basic structure that is typical of an React project:
